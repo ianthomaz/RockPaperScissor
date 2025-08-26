@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors Battle</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL0NXYR2RW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-RL0NXYR2RW');
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #222;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        canvas {
+            border: none;
+            background-color: #000;
+            flex: 1;
+        }
+        #controls {
+            background-color: #333;
+            padding: 8px;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        #info {
+            color: white;
+            margin: 3px 0;
+            font-size: 14px;
+        }
+        #winner {
+            color: #00ff00;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button {
+            margin: 3px;
+            padding: 6px 12px;
+            font-size: 12px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #666;
+        }
+        
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 3px;
+            color: white;
+            flex-wrap: wrap;
+        }
+        .toggle-label {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+            margin-right: 15px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+        
+        /* Slider para raio da gangue */
+        .range-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 3px;
+            color: white;
+        }
+        .range-label {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+        .range-slider {
+            width: 100px;
+            height: 20px;
+            background: #444;
+            outline: none;
+            border-radius: 10px;
+            margin: 0 8px;
+        }
+        .range-value {
+            font-size: 12px;
+            color: #aaa;
+            min-width: 35px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="controls">
+            <div id="info">
+                <div>🪨 Pedra: <span id="rockCount">0</span> | 📄 Papel: <span id="paperCount">0</span> | ✂️ Tesoura: <span id="scissorsCount">0</span></div>
+                <div id="winner"></div>
+            </div>
+            <div>
+                <button onclick="startGame()">Iniciar Jogo</button>
+                <button onclick="resetGame()">Resetar</button>
+                
+                <div class="toggle-container">
+                    <span class="toggle-label">Velocidade Dinâmica:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="speedToggle" onchange="toggleSpeedBoost()">
+                        <span class="slider"></span>
+                    </label>
+                    
+                    <span class="toggle-label">Modo Interativo:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="interactiveToggle" onchange="toggleInteractive()">
+                        <span class="slider"></span>
+                    </label>
+                    
+                    <span class="toggle-label">Modo Gangue:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="gangToggle" onchange="toggleGangMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="interactiveInfo" style="display: none; color: white; margin: 3px 0; font-size: 11px; text-align: center;">
+                    No modo interativo você pode escolher um elemento da lista abaixo. Ao tocar na tela, você cria um campo gravitacional que atrai seus elementos para onde você tocou.
+                </div>
+                <div id="playerChoice" style="display: none; color: white; margin: 3px 0; font-size: 12px; text-align: center;">
+                    Escolha seu elemento: 
+                    <button onclick="chooseElement('rock')" id="chooseRock">🪨 Pedra</button>
+                    <button onclick="chooseElement('paper')" id="choosePaper">📄 Papel</button>
+                    <button onclick="chooseElement('scissors')" id="chooseScissors">✂️ Tesoura</button>
+                </div>
+                <div id="gangControls" style="display: none;" class="range-container">
+                    <span class="range-label">Raio Gangue:</span>
+                    <input type="range" id="gangRadius" class="range-slider" min="10" max="200" value="25" oninput="updateGangRadius()">
+                    <span class="range-value" id="gangRadiusValue">25px</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Ajustar canvas ao tamanho da tela
+        function resizeCanvas() {
+            const controls = document.getElementById('controls');
+            const availableHeight = window.innerHeight - 100;
+            const controlsHeight = controls ? controls.offsetHeight : 120;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = Math.max(300, availableHeight - controlsHeight);
+        }
+        
+        // Redimensionar quando a tela mudar
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', resizeCanvas);
+        resizeCanvas();
+        
+        let objects = [];
+        let gameRunning = false;
+        let animationId;
+        let speedBoostEnabled = false;
+        let interactiveMode = false;
+        let playerElement = null;
+        let gravitationalFields = [];
+        let gangModeEnabled = false;
+        let gangRadius = 25;
+        let interactionCount = 0;
+        
+        // Tipos de objetos
+        const TYPES = {
+            ROCK: 'rock',
+            PAPER: 'paper',
+            SCISSORS: 'scissors'
+        };
+        
+        // Símbolos para cada tipo
+        const SYMBOLS = {
+            [TYPES.ROCK]: '🪨',
+            [TYPES.PAPER]: '📄',
+            [TYPES.SCISSORS]: '✂️'
+        };
+        
+        // Quem ganha de quem
+        const WINS_AGAINST = {
+            [TYPES.ROCK]: TYPES.SCISSORS,
+            [TYPES.PAPER]: TYPES.ROCK,
+            [TYPES.SCISSORS]: TYPES.PAPER
+        };
+        
+        // Criar objeto
+        function createObject(type) {
+            return {
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * (canvas.height - 40) + 20,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                type: type,
+                size: 20
+            };
+        }
+        
+        // Inicializar jogo
+        function startGame() {
+            objects = [];
+            gameRunning = true;
+            interactionCount = 0;
+            document.getElementById('winner').textContent = '';
+            
+            // Criar 30 de cada tipo
+            for (let i = 0; i < 30; i++) {
+                objects.push(createObject(TYPES.ROCK));
+                objects.push(createObject(TYPES.PAPER));
+                objects.push(createObject(TYPES.SCISSORS));
+            }
+            
+            gameLoop();
+        }
+        
+        // Resetar jogo
+        function resetGame() {
+            gameRunning = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            objects = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateCounts();
+        }
+        
+        // Função para ativar/desativar velocidade dinâmica
+        function toggleSpeedBoost() {
+            speedBoostEnabled = document.getElementById('speedToggle').checked;
+        }
+        
+        // Função para ativar/desativar modo interativo
+        function toggleInteractive() {
+            interactiveMode = document.getElementById('interactiveToggle').checked;
+            document.getElementById('interactiveInfo').style.display = interactiveMode ? 'block' : 'none';
+            document.getElementById('playerChoice').style.display = interactiveMode ? 'block' : 'none';
+            
+            if (interactiveMode) {
+                canvas.addEventListener('click', handleCanvasClick);
+                canvas.addEventListener('touchstart', handleCanvasTouch);
+            } else {
+                canvas.removeEventListener('click', handleCanvasClick);
+                canvas.removeEventListener('touchstart', handleCanvasTouch);
+                gravitationalFields = [];
+                playerElement = null;
+                updatePlayerChoice();
+            }
+        }
+        
+        // Função para ativar/desativar modo gangue
+        function toggleGangMode() {
+            gangModeEnabled = document.getElementById('gangToggle').checked;
+            document.getElementById('gangControls').style.display = gangModeEnabled ? 'flex' : 'none';
+        }
+        
+        // Atualizar raio da gangue
+        function updateGangRadius() {
+            gangRadius = parseInt(document.getElementById('gangRadius').value);
+            document.getElementById('gangRadiusValue').textContent = gangRadius + 'px';
+        }
+        
+        // Escolher elemento do jogador
+        function chooseElement(type) {
+            playerElement = type;
+            updatePlayerChoice();
+        }
+        
+        // Atualizar visual da escolha
+        function updatePlayerChoice() {
+            document.getElementById('chooseRock').style.backgroundColor = playerElement === 'rock' ? '#2196F3' : '#444';
+            document.getElementById('choosePaper').style.backgroundColor = playerElement === 'paper' ? '#2196F3' : '#444';
+            document.getElementById('chooseScissors').style.backgroundColor = playerElement === 'scissors' ? '#2196F3' : '#444';
+        }
+        
+        // Lidar com clique no canvas
+        function handleCanvasClick(e) {
+            if (!interactiveMode || !playerElement) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            addGravitationalField(x, y);
+        }
+        
+        // Lidar com toque no canvas
+        function handleCanvasTouch(e) {
+            e.preventDefault();
+            if (!interactiveMode || !playerElement) return;
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            addGravitationalField(x, y);
+        }
+        
+        // Adicionar campo gravitacional
+        function addGravitationalField(x, y) {
+            gravitationalFields.push({
+                x: x,
+                y: y,
+                strength: 0.8,
+                duration: 60
+            });
+        }
+        
+        // Atualizar velocidades baseado na quantidade
+        function updateSpeeds() {
+            if (!speedBoostEnabled) return;
+            
+            const counts = {
+                [TYPES.ROCK]: 0,
+                [TYPES.PAPER]: 0,
+                [TYPES.SCISSORS]: 0
+            };
+            
+            objects.forEach(obj => {
+                counts[obj.type]++;
+            });
+            
+            objects.forEach(obj => {
+                const quantidade = counts[obj.type];
+                const speedMultiplier = quantidade / 30;
+                const baseSpeed = 1;
+                
+                const currentSpeed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+                if (currentSpeed > 0.01) {
+                    const newSpeed = baseSpeed * speedMultiplier;
+                    obj.vx = (obj.vx / currentSpeed) * newSpeed;
+                    obj.vy = (obj.vy / currentSpeed) * newSpeed;
+                }
+            });
+        }
+        
+        // Atualizar contadores
+        function updateCounts() {
+            const counts = {
+                [TYPES.ROCK]: 0,
+                [TYPES.PAPER]: 0,
+                [TYPES.SCISSORS]: 0
+            };
+            
+            objects.forEach(obj => {
+                counts[obj.type]++;
+            });
+            
+            document.getElementById('rockCount').textContent = counts[TYPES.ROCK];
+            document.getElementById('paperCount').textContent = counts[TYPES.PAPER];
+            document.getElementById('scissorsCount').textContent = counts[TYPES.SCISSORS];
+            
+            // Verificar vitória
+            const activeTypes = Object.keys(counts).filter(type => counts[type] > 0);
+            if (activeTypes.length === 1) {
+                gameRunning = false;
+                const winner = activeTypes[0];
+                const winnerNames = {
+                    [TYPES.ROCK]: 'Pedra',
+                    [TYPES.PAPER]: 'Papel',
+                    [TYPES.SCISSORS]: 'Tesoura'
+                };
+                document.getElementById('winner').textContent = `${winnerNames[winner]} venceu!`;
+            }
+        }
+        
+        // Verificar colisão
+        function checkCollision(obj1, obj2) {
+            const dx = obj1.x - obj2.x;
+            const dy = obj1.y - obj2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < (obj1.size + obj2.size) / 2;
+        }
+        
+        // Processar colisões
+        function processCollisions() {
+            for (let i = 0; i < objects.length; i++) {
+                for (let j = i + 1; j < objects.length; j++) {
+                    const obj1 = objects[i];
+                    const obj2 = objects[j];
+                    
+                    if (obj1.type !== obj2.type && checkCollision(obj1, obj2)) {
+                        if (gangModeEnabled) {
+                            // Modo gangue: contar aliados próximos (25px)
+                            let obj1Allies = 0;
+                            let obj2Allies = 0;
+                            
+                            // Contar aliados do obj1
+                            for (let k = 0; k < objects.length; k++) {
+                                if (objects[k].type === obj1.type) {
+                                    const dx = objects[k].x - obj1.x;
+                                    const dy = objects[k].y - obj1.y;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+                                    if (distance <= 10) {
+                                        obj1Allies++;
+                                    }
+                                }
+                            }
+                            
+                            // Contar aliados do obj2
+                            for (let k = 0; k < objects.length; k++) {
+                                if (objects[k].type === obj2.type) {
+                                    const dx = objects[k].x - obj2.x;
+                                    const dy = objects[k].y - obj2.y;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+                                    if (distance <= 10) {
+                                        obj2Allies++;
+                                    }
+                                }
+                            }
+                            
+                            // Decidir vencedor baseado em números
+                            if (obj1Allies > obj2Allies) {
+                                // obj1 tem mais aliados - obj1 vence
+                                obj2.type = obj1.type;
+                            } else if (obj2Allies > obj1Allies) {
+                                // obj2 tem mais aliados - obj2 vence
+                                obj1.type = obj2.type;
+                            } else {
+                                // Empate numérico - usar regra tradicional
+                                if (WINS_AGAINST[obj1.type] === obj2.type) {
+                                    obj2.type = obj1.type;
+                                } else if (WINS_AGAINST[obj2.type] === obj1.type) {
+                                    obj1.type = obj2.type;
+                                }
+                            }
+                        } else {
+                            // Modo tradicional
+                            if (WINS_AGAINST[obj1.type] === obj2.type) {
+                                obj2.type = obj1.type;
+                            } else if (WINS_AGAINST[obj2.type] === obj1.type) {
+                                obj1.type = obj2.type;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Atualizar movimento
+        function updateMovement() {
+            objects.forEach(obj => {
+                // Aplicar campos gravitacionais se no modo interativo
+                if (interactiveMode && playerElement && obj.type === playerElement) {
+                    gravitationalFields.forEach(field => {
+                        const dx = field.x - obj.x;
+                        const dy = field.y - obj.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > 0) {
+                            const force = field.strength / (distance * 0.01 + 1);
+                            obj.vx += (dx / distance) * force;
+                            obj.vy += (dy / distance) * force;
+                            
+                            const maxSpeed = 5;
+                            const currentSpeed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+                            if (currentSpeed > maxSpeed) {
+                                obj.vx = (obj.vx / currentSpeed) * maxSpeed;
+                                obj.vy = (obj.vy / currentSpeed) * maxSpeed;
+                            }
+                        }
+                    });
+                }
+                
+                obj.x += obj.vx;
+                obj.y += obj.vy;
+                
+                // Rebater nas bordas
+                if (obj.x <= obj.size/2 || obj.x >= canvas.width - obj.size/2) {
+                    obj.vx = -obj.vx;
+                }
+                if (obj.y <= obj.size/2 || obj.y >= canvas.height - obj.size/2) {
+                    obj.vy = -obj.vy;
+                }
+                
+                // Manter dentro dos limites
+                obj.x = Math.max(obj.size/2, Math.min(canvas.width - obj.size/2, obj.x));
+                obj.y = Math.max(obj.size/2, Math.min(canvas.height - obj.size/2, obj.y));
+            });
+            
+            // Diminuir duração dos campos gravitacionais
+            gravitationalFields = gravitationalFields.filter(field => {
+                field.duration--;
+                return field.duration > 0;
+            });
+        }
+        
+        // Desenhar
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Contador de interações no canto superior esquerdo
+            ctx.font = '16px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Interações: ${interactionCount}`, 10, 25);
+            
+            // Desenhar campos gravitacionais
+            if (interactiveMode) {
+                gravitationalFields.forEach(field => {
+                    const opacity = field.duration / 60;
+                    ctx.fillStyle = `rgba(33, 150, 243, ${opacity * 0.3})`;
+                    ctx.beginPath();
+                    ctx.arc(field.x, field.y, 30, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+            
+            objects.forEach(obj => {
+                ctx.font = `${obj.size}px Arial`;
+                ctx.textAlign = 'center';
+                
+                // Destacar elementos do jogador
+                if (interactiveMode && playerElement && obj.type === playerElement) {
+                    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.size, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+                
+                ctx.fillStyle = 'white';
+                ctx.fillText(SYMBOLS[obj.type], obj.x, obj.y + obj.size/3);
+            });
+        }
+        
+        // Loop principal
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            updateMovement();
+            updateSpeeds();
+            processCollisions();
+            draw();
+            updateCounts();
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        // Inicializar contadores
+        updateCounts();
+    </script>
+</body>
+</html>

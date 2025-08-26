@@ -1,0 +1,41 @@
+{
+  "name": "rps",
+  "display_name": "RPS - Sistema de Gestão",
+  "port": "8084/8085",
+  "type": "web",
+  "description": "Sistema de gestão de projetos e recursos da VM",
+  "github_repo": null,
+  "created_at": "2025-08-26T05:06:00.000Z",
+  "status": "stopped",
+  "docker_compose_file": "rps.dcompose.yml",
+  "main_file": "server.js",
+  "nginx_config": "/etc/nginx/sites-available/webplace.conf",
+  "nginx_route": "/rps/",
+  "url": "https://webplace.cc/rps/",
+  "containers": [
+    "rps_nginx",
+    "rps_backend"
+  ],
+  "networks": [
+    "rps_network"
+  ],
+  "volumes": [
+    "rps_data"
+  ],
+  "environment": {
+    "NODE_ENV": "development",
+    "PORT": "3000"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "features": [
+    "Interface responsiva",
+    "Design moderno",
+    "JavaScript funcional",
+    "Nginx configurado",
+    "Docker Compose",
+    "Backend Node.js"
+  ],
+  "notes": "Projeto criado manualmente antes do sistema de dashboard. Já possui estrutura completa com Docker Compose e Nginx configurado."
+}

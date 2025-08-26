@@ -1,0 +1,16 @@
+{
+  "name": "rps-battle-simulation",
+  "version": "1.0.0",
+  "description": "🎮 RPS - Rock Paper Scissors Battle Simulation - Simulação interativa de batalha entre elementos desenvolvida na VM webplace.cc",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": ["game", "simulation", "rps", "rock-paper-scissors", "battle", "canvas", "html5"],
+  "author": "VM webplace.cc",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
