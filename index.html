@@ -40,16 +40,19 @@
             padding: 8px;
             flex-shrink: 0;
             font-size: 12px;
+            text-align: center;
         }
         #info {
             color: white;
             margin: 3px 0;
             font-size: 14px;
+            text-align: center;
         }
         #winner {
             color: #00ff00;
             font-size: 16px;
             font-weight: bold;
+            text-align: center;
         }
         button {
             margin: 3px;
@@ -63,6 +66,77 @@
         }
         button:hover {
             background-color: #666;
+        }
+        
+        /* Botões principais destacados */
+        .main-button {
+            margin: 5px auto;
+            padding: 4px 8px;
+            font-size: 14px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: 2px solid #2E7D32;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .main-button:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+        
+        .main-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        /* Botão de reset com cor diferente */
+        .reset-button {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            border-color: #b71c1c;
+        }
+        
+        .reset-button:hover {
+            background: linear-gradient(45deg, #d32f2f, #f44336);
+        }
+        
+        /* Botões de elementos */
+        .element-button {
+            margin: 3px;
+            padding: 5px 11px;
+            font-size: 16px;
+            background-color: #444;
+            color: white;
+            border: 2px solid #666;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .element-button:hover:not(:disabled) {
+            background-color: #555;
+            border-color: #888;
+            transform: scale(1.05);
+        }
+        
+        .element-button:disabled {
+            background-color: #222;
+            color: #666;
+            border-color: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .element-button:not(:disabled) {
+            background-color: #2d5a3d;
+            border-color: #4a7c59;
         }
         
         /* Toggle Switch */
@@ -151,20 +225,24 @@
         <canvas id="gameCanvas"></canvas>
         <div id="controls">
             <div id="info">
-                <div>🪨 Pedra: <span id="rockCount">0</span> | 📄 Papel: <span id="paperCount">0</span> | ✂️ Tesoura: <span id="scissorsCount">0</span></div>
+                <div>
+                    <button id="rockButton" onclick="addElement('rock')" class="element-button" disabled>+ 🪨 Pedra: <span id="rockCount">0</span></button>
+                    <button id="paperButton" onclick="addElement('paper')" class="element-button" disabled>+ 📄 Papel: <span id="paperCount">0</span></button>
+                    <button id="scissorsButton" onclick="addElement('scissors')" class="element-button" disabled>+ ✂️ Tesoura: <span id="scissorsCount">0</span></button>
+                </div>
                 <div id="winner"></div>
             </div>
             <div>
-                <button onclick="startGame()">Iniciar Jogo</button>
-                <button onclick="resetGame()">Resetar</button>
+                <button onclick="startGame()" class="main-button">🚀 Iniciar Jogo</button>
+                <button onclick="resetGame()" class="main-button reset-button" style="display: none;">🔄 Resetar</button>
                 
                 <div class="toggle-container">
-                    <span class="toggle-label">Velocidade Dinâmica:</span>
+                    <span class="toggle-label">🐢</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="speedToggle" onchange="toggleSpeedBoost()">
                         <span class="slider"></span>
                     </label>
-                    
+                    <span class="toggle-label">🚀 |</span>
                     <span class="toggle-label">Modo Interativo:</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="interactiveToggle" onchange="toggleInteractive()">
@@ -251,8 +329,8 @@
             return {
                 x: Math.random() * (canvas.width - 40) + 20,
                 y: Math.random() * (canvas.height - 40) + 20,
-                vx: (Math.random() - 0.5) * 2,
-                vy: (Math.random() - 0.5) * 2,
+                vx: (Math.random() - 0.5) * 1,
+                vy: (Math.random() - 0.5) * 1,
                 type: type,
                 size: 20
             };
@@ -272,6 +350,13 @@
                 objects.push(createObject(TYPES.SCISSORS));
             }
             
+            // Atualizar contadores e habilitar botões
+            updateCounts();
+            
+            // Esconder botão iniciar, mostrar resetar
+            document.querySelector('button[onclick="startGame()"]').style.display = 'none';
+            document.querySelector('button[onclick="resetGame()"]').style.display = 'block';
+            
             gameLoop();
         }
         
@@ -283,6 +368,11 @@
             }
             objects = [];
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Mostrar botão iniciar, esconder resetar
+            document.querySelector('button[onclick="startGame()"]').style.display = 'block';
+            document.querySelector('button[onclick="resetGame()"]').style.display = 'none';
+            
             updateCounts();
         }
         
@@ -392,6 +482,30 @@
             });
         }
         
+        // Adicionar elemento ao jogo
+        function addElement(type) {
+            if (!gameRunning) return;
+            
+            const colors = {
+                [TYPES.ROCK]: '#8B4513',
+                [TYPES.PAPER]: '#FFFFFF',
+                [TYPES.SCISSORS]: '#C0C0C0'
+            };
+            
+            const newObj = {
+                x: Math.random() * (canvas.width - 20) + 10,
+                y: Math.random() * (canvas.height - 20) + 10,
+                vx: (Math.random() - 0.5) * 1,
+                vy: (Math.random() - 0.5) * 1,
+                size: 15,
+                color: colors[type],
+                type: type
+            };
+            
+            objects.push(newObj);
+            updateCounts();
+        }
+        
         // Atualizar contadores
         function updateCounts() {
             const counts = {
@@ -407,6 +521,11 @@
             document.getElementById('rockCount').textContent = counts[TYPES.ROCK];
             document.getElementById('paperCount').textContent = counts[TYPES.PAPER];
             document.getElementById('scissorsCount').textContent = counts[TYPES.SCISSORS];
+            
+            // Gerenciar estado dos botões
+            document.getElementById('rockButton').disabled = counts[TYPES.ROCK] === 0;
+            document.getElementById('paperButton').disabled = counts[TYPES.PAPER] === 0;
+            document.getElementById('scissorsButton').disabled = counts[TYPES.SCISSORS] === 0;
             
             // Verificar vitória
             const activeTypes = Object.keys(counts).filter(type => counts[type] > 0);
@@ -470,23 +589,29 @@
                             // Decidir vencedor baseado em números
                             if (obj1Allies > obj2Allies) {
                                 // obj1 tem mais aliados - obj1 vence
+                                interactionCount++;
                                 obj2.type = obj1.type;
                             } else if (obj2Allies > obj1Allies) {
                                 // obj2 tem mais aliados - obj2 vence
+                                interactionCount++;
                                 obj1.type = obj2.type;
                             } else {
                                 // Empate numérico - usar regra tradicional
                                 if (WINS_AGAINST[obj1.type] === obj2.type) {
+                                    interactionCount++;
                                     obj2.type = obj1.type;
                                 } else if (WINS_AGAINST[obj2.type] === obj1.type) {
+                                    interactionCount++;
                                     obj1.type = obj2.type;
                                 }
                             }
                         } else {
                             // Modo tradicional
                             if (WINS_AGAINST[obj1.type] === obj2.type) {
+                                interactionCount++;
                                 obj2.type = obj1.type;
                             } else if (WINS_AGAINST[obj2.type] === obj1.type) {
+                                interactionCount++;
                                 obj1.type = obj2.type;
                             }
                         }
