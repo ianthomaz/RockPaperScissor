@@ -92,13 +92,11 @@ location /rps/ {
 
 ### **Projetos na VM:**
 1. **Webplace** (porta 8010) - Site principal
-2. **Bike Anjo Sistema** (porta 8082) - `/sistemaBA/`
 3. **GCG** (porta 8004) - Glass Collection Game
 4. **RPS Battle** (porta 8084) - `/rps/` - **🎮 NOVA SIMULAÇÃO**
 
 ### **URLs da VM:**
 - **Principal**: `https://webplace.cc/`
-- **Bike Anjo**: `https://webplace.cc/sistemaBA/`
 - **RPS Battle**: `https://webplace.cc/rps/` ✅
 
 ## 🛠️ **Desenvolvimento**
