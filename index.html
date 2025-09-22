@@ -139,6 +139,25 @@
             border-color: #4a7c59;
         }
         
+        /* Responsividade para telas pequenas */
+        @media (max-width: 768px) {
+            .element-button {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+            
+            /* Esconde o texto dos elementos em telas pequenas */
+            .element-text {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .element-text {
+                display: inline;
+            }
+        }
+        
         /* Toggle Switch */
         .toggle-container {
             display: flex;
@@ -226,9 +245,9 @@
         <div id="controls">
             <div id="info">
                 <div>
-                    <button id="rockButton" onclick="addElement('rock')" class="element-button" disabled>+ 🪨 Pedra: <span id="rockCount">0</span></button>
-                    <button id="paperButton" onclick="addElement('paper')" class="element-button" disabled>+ 📄 Papel: <span id="paperCount">0</span></button>
-                    <button id="scissorsButton" onclick="addElement('scissors')" class="element-button" disabled>+ ✂️ Tesoura: <span id="scissorsCount">0</span></button>
+                    <button id="rockButton" onclick="addElement('rock')" class="element-button" disabled>+ 🪨 <span class="element-text">Pedra</span>: <span id="rockCount">0</span></button>
+                    <button id="paperButton" onclick="addElement('paper')" class="element-button" disabled>+ 📄 <span class="element-text">Papel</span>: <span id="paperCount">0</span></button>
+                    <button id="scissorsButton" onclick="addElement('scissors')" class="element-button" disabled>+ ✂️ <span class="element-text">Tesoura</span>: <span id="scissorsCount">0</span></button>
                 </div>
                 <div id="winner"></div>
             </div>
