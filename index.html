@@ -237,6 +237,11 @@
             color: #aaa;
             min-width: 35px;
         }
+        .count-span {
+            display: inline-block;
+            min-width: 25px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -245,9 +250,13 @@
         <div id="controls">
             <div id="info">
                 <div>
-                    <button id="rockButton" onclick="addElement('rock')" class="element-button" disabled>+ 🪨 <span class="element-text">Pedra</span>: <span id="rockCount">0</span></button>
-                    <button id="paperButton" onclick="addElement('paper')" class="element-button" disabled>+ 📄 <span class="element-text">Papel</span>: <span id="paperCount">0</span></button>
-                    <button id="scissorsButton" onclick="addElement('scissors')" class="element-button" disabled>+ ✂️ <span class="element-text">Tesoura</span>: <span id="scissorsCount">0</span></button>
+                    <button id="rockButton" onclick="addElement('rock')" class="element-button" disabled>+ 🪨 <span class="element-text">Pedra</span>: <span id="rockCount" class="count-span">0</span></button>
+                    <button id="paperButton" onclick="addElement('paper')" class="element-button" disabled>+ 📄 <span class="element-text">Papel</span>: <span id="paperCount" class="count-span">0</span></button>
+                    <button id="scissorsButton" onclick="addElement('scissors')" class="element-button" disabled>+ ✂️ <span class="element-text">Tesoura</span>: <span id="scissorsCount" class="count-span">0</span></button>
+                </div>
+                <div id="gameStats" style="color: white; margin-top: 5px; font-size: 12px; text-align: center;">
+                    <span>Interações: <span id="interactionCounter">0</span></span> |
+                    <span>Tempo de Jogo: <span id="gameTimer">0s</span></span>
                 </div>
                 <div id="winner"></div>
             </div>
@@ -276,6 +285,9 @@
                 </div>
                 <div id="interactiveInfo" style="display: none; color: white; margin: 3px 0; font-size: 11px; text-align: center;">
                     No modo interativo você pode escolher um elemento da lista abaixo. Ao tocar na tela, você cria um campo gravitacional que atrai seus elementos para onde você tocou.
+                </div>
+                <div id="gangInfo" style="display: none; color: white; margin: 3px 0; font-size: 11px; text-align: center;">
+                    No modo gangue, o resultado de uma colisão é decidido pela quantidade de aliados próximos. O grupo com mais membros vence a disputa.
                 </div>
                 <div id="playerChoice" style="display: none; color: white; margin: 3px 0; font-size: 12px; text-align: center;">
                     Escolha seu elemento: 
@@ -321,6 +333,8 @@
         let gangModeEnabled = false;
         let gangRadius = 25;
         let interactionCount = 0;
+        let gameTime = 0;
+        let lastTimestamp = 0;
         
         // Tipos de objetos
         const TYPES = {
@@ -360,6 +374,8 @@
             objects = [];
             gameRunning = true;
             interactionCount = 0;
+            gameTime = 0;
+            lastTimestamp = 0;
             document.getElementById('winner').textContent = '';
             
             // Criar 30 de cada tipo
@@ -376,7 +392,7 @@
             document.querySelector('button[onclick="startGame()"]').style.display = 'none';
             document.querySelector('button[onclick="resetGame()"]').style.display = 'block';
             
-            gameLoop();
+            requestAnimationFrame(gameLoop);
         }
         
         // Resetar jogo
@@ -392,6 +408,8 @@
             document.querySelector('button[onclick="startGame()"]').style.display = 'block';
             document.querySelector('button[onclick="resetGame()"]').style.display = 'none';
             
+            document.getElementById('gameTimer').textContent = '0s';
+            document.getElementById('interactionCounter').textContent = '0';
             updateCounts();
         }
         
@@ -422,6 +440,7 @@
         function toggleGangMode() {
             gangModeEnabled = document.getElementById('gangToggle').checked;
             document.getElementById('gangControls').style.display = gangModeEnabled ? 'flex' : 'none';
+            document.getElementById('gangInfo').style.display = gangModeEnabled ? 'block' : 'none';
         }
         
         // Atualizar raio da gangue
@@ -540,6 +559,7 @@
             document.getElementById('rockCount').textContent = counts[TYPES.ROCK];
             document.getElementById('paperCount').textContent = counts[TYPES.PAPER];
             document.getElementById('scissorsCount').textContent = counts[TYPES.SCISSORS];
+            document.getElementById('interactionCounter').textContent = interactionCount;
             
             // Gerenciar estado dos botões
             document.getElementById('rockButton').disabled = counts[TYPES.ROCK] === 0;
@@ -691,12 +711,6 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Contador de interações no canto superior esquerdo
-            ctx.font = '16px Arial';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Interações: ${interactionCount}`, 10, 25);
-            
             // Desenhar campos gravitacionais
             if (interactiveMode) {
                 gravitationalFields.forEach(field => {
@@ -726,14 +740,26 @@
         }
         
         // Loop principal
-        function gameLoop() {
+        function gameLoop(timestamp) {
             if (!gameRunning) return;
+
+            if (!lastTimestamp) {
+                lastTimestamp = timestamp;
+            }
+            let deltaTime = (timestamp - lastTimestamp) / 1000; // em segundos
+            lastTimestamp = timestamp;
+
+            if (speedBoostEnabled) {
+                deltaTime *= 2; // Acelera o tempo
+            }
+            gameTime += deltaTime;
             
             updateMovement();
             updateSpeeds();
             processCollisions();
             draw();
             updateCounts();
+            document.getElementById('gameTimer').textContent = `${Math.floor(gameTime)}s`;
             
             animationId = requestAnimationFrame(gameLoop);
         }
